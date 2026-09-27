@@ -40,7 +40,7 @@ function show(n){
  document.querySelector('#hero-title').innerHTML=s.title;
  document.querySelector('#hero-copy').textContent=s.copy;
  const cta=document.querySelector('#hero-cta');cta.innerHTML=`${s.cta} <span>↗</span>`;
- cta.href=`/services/${['managed-it','infrastructure','network-solutions','cybersecurity','cloud-solutions','business-communications','ai-automation','ict-procurement'][index]}/`;
+ cta.href=`services/${['managed-it','infrastructure','network-solutions','cybersecurity','cloud-solutions','business-communications','ai-automation','ict-procurement'][index]}/`;
  document.querySelector('#hero-points').innerHTML=s.points.map(p=>`<span>${p}</span>`).join('');
  document.querySelector('#slide-counter').textContent=`${String(index+1).padStart(2,'0')} / 08`;
  stage.innerHTML=art(s.art);stage.classList.remove('reveal');void stage.offsetWidth;stage.classList.add('reveal');
