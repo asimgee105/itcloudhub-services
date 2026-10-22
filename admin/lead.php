@@ -1,0 +1,12 @@
+<?php
+require __DIR__.'/../app/bootstrap.php'; admin(); require __DIR__.'/layout.php'; require __DIR__.'/../app/mail.php';
+$id=(int)($_GET['id']??0); $lead=query('SELECT * FROM leads WHERE id=?',[$id])->fetch();
+if(!$lead) { http_response_code(404); exit('Lead not found.'); }
+if($_SERVER['REQUEST_METHOD']==='POST') {
+    check_csrf();
+    if(post('action')==='retry') { $sent=notify_lead($id); flash($sent?'Notification accepted by the SMTP server.':'Notification not sent. Check email settings and the delivery status below.'); }
+    else { if(!in_array(post('status'),['new','contacted','qualified','won','closed'],true) || strlen(post('notes'))>10000) { http_response_code(422); exit('Invalid status or notes too long.'); } query('UPDATE leads SET status=?,notes=? WHERE id=?',[post('status'),post('notes'),$id]); flash('Lead updated.'); }
+    go('admin/lead.php?id='.$id);
+}
+page_start('Enquiry #'.$id);
+?><a href="./">← All enquiries</a><div class="detail-grid"><section class="panel"><h2><?=e($lead['name'])?></h2><dl><dt>Email</dt><dd><a href="mailto:<?=e($lead['email'])?>"><?=e($lead['email'])?></a></dd><dt>Phone</dt><dd><?=e($lead['phone']?:'Not provided')?></dd><dt>Company</dt><dd><?=e($lead['company']?:'Not provided')?></dd><dt>Interested in</dt><dd><?=e($lead['service'])?></dd><dt>Received (UTC)</dt><dd><?=e($lead['created_at'])?></dd></dl><h3>Project message</h3><div class="message"><?=e($lead['message'])?></div><h3>Email notification</h3><p>Status: <strong><?=e($lead['mail_status'])?></strong></p><?php if($lead['mail_error']): ?><p class="error"><?=e($lead['mail_error'])?></p><?php endif; ?><?php if(in_array($lead['mail_status'],['failed','pending','disabled'],true)): ?><form method="post"><?=csrf_input()?><input type="hidden" name="action" value="retry"><button class="secondary">Retry notification</button></form><?php endif; ?></section><section class="panel"><h2>Manage conversation</h2><form method="post"><?=csrf_input()?><label>Status<select name="status"><?php foreach(['new','contacted','qualified','won','closed'] as $s): ?><option value="<?=$s?>" <?=$lead['status']===$s?'selected':''?>><?=ucfirst($s)?></option><?php endforeach; ?></select></label><label>Internal notes<textarea name="notes" rows="10" maxlength="10000" placeholder="Next steps, budget, follow-up date…"><?=e($lead['notes'])?></textarea></label><button>Save changes</button></form></section></div><?php page_end(); ?>
